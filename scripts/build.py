@@ -136,6 +136,7 @@ def main():
     shutil.copytree(ROOT / 'module', stage)
     shutil.copytree(ROOT / 'src', stage / 'src')
     shutil.copyfile(ROOT / 'README.md', stage / 'README.md')
+    shutil.copyfile(ROOT / 'LICENSE', stage / 'LICENSE')
     image = stage / 'payload.img'
     extract_payload(seed, image, profile)
     patch_image(image, native, build / 'mount')
