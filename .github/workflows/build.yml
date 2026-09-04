@@ -13,7 +13,7 @@ jobs:
   check:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - name: Validate build logic and shell syntax
         run: |
           python3 -m unittest discover -s tests -v
@@ -25,18 +25,20 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - name: Install pinned Android NDK and filesystem tools
         run: |
           set -euo pipefail
-          sdkmanager --install 'ndk;29.0.14206865'
+          if [ ! -f "$ANDROID_HOME/ndk/29.0.14206865/source.properties" ]; then
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'ndk;29.0.14206865'
+          fi
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends e2fsprogs
       - name: Compile and assemble module
         run: python3 scripts/build.py
       - name: Upload module ZIP, checksums and build provenance
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: ColorOS-Global-TangoBridge-cph2841-ex01-500
           path: dist/*
