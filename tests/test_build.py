@@ -45,11 +45,14 @@ class BuildTests(unittest.TestCase):
             stage.mkdir()
             (stage / 'module.prop').write_text('id=test\n')
             (stage / 'service.sh').write_text('#!/system/bin/sh\n')
+            (stage / 'webroot').mkdir()
+            (stage / 'webroot/index.html').write_text('<!doctype html>')
             output = d / 'module.zip'
             build.write_zip(stage, output)
             with zipfile.ZipFile(output) as z:
-                self.assertEqual(z.namelist(), ['module.prop', 'service.sh'])
+                self.assertEqual(z.namelist(), ['module.prop', 'service.sh', 'webroot/index.html'])
                 self.assertEqual((z.getinfo('service.sh').external_attr >> 16) & 0o777, 0o755)
+                self.assertEqual((z.getinfo('webroot/index.html').external_attr >> 16) & 0o777, 0o644)
                 self.assertIsNone(z.testzip())
 
 

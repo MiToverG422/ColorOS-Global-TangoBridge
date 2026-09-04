@@ -18,6 +18,8 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -v
           python3 -m py_compile scripts/build.py
+          node --test tests/test_health.cjs
+          node --check module/webroot/app.js
           for script in module/*.sh; do bash -n "$script"; done
   build:
     if: github.event_name == 'workflow_dispatch'

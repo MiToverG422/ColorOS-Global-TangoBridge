@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>TangoBridge · 运行检测</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="health.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+<main>
+  <header><div class="brand"><span class="logo" aria-hidden="true">T</span><div><strong>TangoBridge</strong><small>ColorOS Global · ARM32</small></div></div><span class="tag">实验版</span></header>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="eyebrow">设备运行检测</div>
+    <h1 id="hero-title">让兼容状态，一目了然。</h1>
+    <p>查看系统适配与 32 位运行环境，快速找到需要处理的环节。</p>
+    <div class="toolbar"><button id="refresh" class="primary">刷新检测</button><span id="updated" role="status" aria-live="polite">等待读取设备</span></div>
+  </section>
+  <div id="notice" class="notice" role="alert" hidden></div>
+  <section id="overview" class="overview" aria-live="polite">
+    <span id="status-mark" class="status-mark" aria-hidden="true">…</span>
+    <div><span class="eyebrow">当前状态</span><h2 id="status-title">尚未检测</h2><p id="status-description">正在连接 KernelSU 管理器。</p></div>
+  </section>
+  <div class="metrics"><article><span>系统适配</span><strong id="compat">—</strong></article><article><span>32 位服务</span><strong id="runtime">—</strong></article><article><span>SELinux</span><strong id="selinux">—</strong></article></div>
+  <section class="panel"><div class="section-heading"><h2>设备信息</h2><span id="version" class="muted">版本待检测</span></div><dl id="device" class="device"><dt>机型</dt><dd>—</dd><dt>系统版本</dt><dd>—</dd></dl></section>
+  <section class="panel"><div class="section-heading"><h2>兼容性检查</h2><span id="check-count" class="muted">等待检测</span></div><div id="checks"><p class="placeholder">读取完成后，这里会显示每一项检查和处理建议。</p></div></section>
+  <section class="panel"><div class="section-heading"><h2>诊断工具</h2><span class="muted">仅在本机读取</span></div><p class="muted">摘要不包含序列号和应用列表。日志可能含应用路径，分享前请检查。</p><div class="tools"><button id="report" disabled>生成诊断摘要</button><button id="logs" disabled>查看启动日志</button></div><div id="report-box" hidden><label for="report-text">诊断摘要</label><textarea id="report-text" readonly rows="10"></textarea><button id="copy">复制摘要</button></div><details id="log-box" hidden><summary>最近 120 行启动日志</summary><pre id="log-text"></pre></details></section>
+  <footer>仅适配 CPH2841 · EX01 16.0.10.500<br>检测通过不代表所有应用均兼容。更新系统前请先停用模块。</footer>
+</main>
+</body>
+</html>

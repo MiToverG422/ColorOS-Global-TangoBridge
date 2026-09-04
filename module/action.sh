@@ -1,7 +1,7 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
 . "$MODDIR/common.sh"
-echo 'ColorOS Global TangoBridge 0.2.1-test'
+echo "ColorOS Global TangoBridge $(sed -n 's/^version=//p' "$MODDIR/module.prop")"
 echo "Build: $(getprop ro.build.display.id)"
 echo "Status: $(cat "$DATA/status" 2>/dev/null)"
 echo "Service: $(getprop init.svc.zygote_tango)"
