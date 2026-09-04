@@ -2,6 +2,44 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
+  const pages = {
+    overview: ['OVERVIEW / 01', '运行概览', '系统信息与转译状态，一眼掌握。'],
+    checks: ['HEALTH / 02', '兼容性检测', '逐项检查运行环境，了解异常原因。'],
+    diagnostics: ['DIAGNOSTICS / 03', '诊断工具', '整理检测摘要，按需查看启动日志。']
+  };
+  function showPage(moveFocus = false) {
+    const requested = location.hash.slice(1);
+    const page = Object.hasOwn(pages, requested) ? requested : 'overview';
+    for (const name of Object.keys(pages)) $(`page-${name}`).hidden = name !== page;
+    document.querySelectorAll('[data-page]').forEach(link => {
+      if (link.dataset.page === page) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+    [$('page-label').textContent, $('hero-title').textContent, $('page-description').textContent] = pages[page];
+    document.title = `TangoBridge · ${pages[page][1]}`;
+    if (moveFocus) { window.scrollTo(0, 0); $('hero-title').focus({preventScroll: true}); }
+  }
+  window.addEventListener('hashchange', () => showPage(true));
+  showPage();
+
+  let fullscreenRequested = false;
+  function setFullscreen(enabled) {
+    const button = $('fullscreen');
+    try {
+      if (!window.ksu || typeof window.ksu.fullScreen !== 'function') throw new Error('unsupported');
+      window.ksu.fullScreen(enabled);
+      fullscreenRequested = enabled;
+      button.textContent = enabled ? '退出全屏' : '进入全屏';
+      button.setAttribute('aria-pressed', String(enabled));
+    } catch (_) {
+      button.textContent = '全屏不可用';
+      button.title = '当前管理器未提供可用的全屏接口';
+      button.disabled = true;
+      button.setAttribute('aria-pressed', 'false');
+    }
+  }
+  $('fullscreen').addEventListener('click', () => setFullscreen(!fullscreenRequested));
+  setFullscreen(true);
   const COMMANDS = Object.freeze({
     snapshot: 'sh /data/adb/modules/tango32_findx9u/diagnose.sh',
     logs: '/data/adb/ksu/bin/busybox timeout 5 /data/adb/ksu/bin/busybox tail -n 120 /data/adb/tango32_findx9u/startup.log'

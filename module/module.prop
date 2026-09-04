@@ -1,6 +1,6 @@
 id=tango32_findx9u
 name=ColorOS Global TangoBridge
-version=0.3.1-test
-versionCode=5
+version=0.4.0-test
+versionCode=6
 author=MiToverG422
 description=ARM32 Tango runtime for ColorOS 16.0.10.500(EX01). CN501 donor. Experimental; disable and reboot to revert.

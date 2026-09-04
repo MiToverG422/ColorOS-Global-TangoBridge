@@ -12,23 +12,34 @@
 </head>
 <body>
 <main>
-  <header><div class="brand"><span class="logo" aria-hidden="true">T</span><div><strong>TangoBridge</strong><small>ColorOS Global · ARM32</small></div></div><span class="tag">实验版</span></header>
+  <header><div class="brand"><span class="logo" aria-hidden="true">T</span><div><strong>TangoBridge</strong><small>ColorOS Global · ARM32</small></div></div><button id="fullscreen" class="screen-button" aria-pressed="false">全屏</button></header>
   <section class="hero" aria-labelledby="hero-title">
-    <div class="eyebrow">设备运行检测</div>
-    <h1 id="hero-title">让兼容状态，一目了然。</h1>
-    <p>查看系统适配与 32 位运行环境，快速找到需要处理的环节。</p>
+    <div id="page-label" class="eyebrow">OVERVIEW / 01</div>
+    <h1 id="hero-title" tabindex="-1">运行概览</h1>
+    <p id="page-description">系统信息与转译状态，一眼掌握。</p>
     <div class="toolbar"><button id="refresh" class="primary">刷新检测</button><span id="updated" role="status" aria-live="polite">等待读取设备</span></div>
   </section>
   <div id="notice" class="notice" role="alert" hidden></div>
+  <div id="page-overview" class="page" aria-label="运行概览">
   <section id="overview" class="overview" aria-live="polite">
     <span id="status-mark" class="status-mark" aria-hidden="true">…</span>
     <div><span class="eyebrow">当前状态</span><h2 id="status-title">尚未检测</h2><p id="status-description">正在连接 KernelSU 管理器。</p></div>
   </section>
   <div class="metrics"><article><span>系统适配</span><strong id="compat">—</strong></article><article><span>32 位服务</span><strong id="runtime">—</strong></article><article><span>SELinux</span><strong id="selinux">—</strong></article></div>
   <section class="panel"><div class="section-heading"><h2>设备信息</h2><span id="version" class="muted">版本待检测</span></div><dl id="device" class="device"><dt>机型</dt><dd>—</dd><dt>系统版本</dt><dd>—</dd></dl></section>
+  </div>
+  <div id="page-checks" class="page" aria-label="兼容性检测" hidden>
   <section class="panel"><div class="section-heading"><h2>兼容性检查</h2><span id="check-count" class="muted">等待检测</span></div><div id="checks"><p class="placeholder">读取完成后，这里会显示每一项检查和处理建议。</p></div></section>
+  </div>
+  <div id="page-diagnostics" class="page" aria-label="诊断工具" hidden>
   <section class="panel"><div class="section-heading"><h2>诊断工具</h2><span class="muted">仅在本机读取</span></div><p class="muted">摘要不包含序列号和应用列表。日志可能含应用路径，分享前请检查。</p><div class="tools"><button id="report" disabled>生成诊断摘要</button><button id="logs" disabled>查看启动日志</button></div><div id="report-box" hidden><label for="report-text">诊断摘要</label><textarea id="report-text" readonly rows="10"></textarea><button id="copy">复制摘要</button></div><details id="log-box" hidden><summary>最近 120 行启动日志</summary><pre id="log-text"></pre></details></section>
+  </div>
   <footer>适用版本 · 16.0.10.500(EX01)<br>检测通过不代表所有应用均兼容。更新系统前请先停用模块。</footer>
 </main>
+<nav class="bottom-nav" aria-label="页面导航">
+  <a href="#overview" data-page="overview" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>概览</span></a>
+  <a href="#checks" data-page="checks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 7v5c0 5-9 9-9 9s-9-4-9-9V7Z"/><path d="m8 12 3 3 5-6"/></svg><span>检测</span></a>
+  <a href="#diagnostics" data-page="diagnostics"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m8 9 3 3-3 3m5 0h3"/></svg><span>诊断</span></a>
+</nav>
 </body>
 </html>

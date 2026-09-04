@@ -11,4 +11,4 @@ for entry in "$MODPATH"/*; do
 done
 for f in "$MODPATH"/*.sh; do set_perm "$f" 0 0 0755; done
 set_perm "$MODPATH/zygote_probe" 0 0 0755
-ui_print "- Installed. Reboot to enable; Action shows status."
+ui_print "- Installed. Reboot to enable; open WebUI to view status."
