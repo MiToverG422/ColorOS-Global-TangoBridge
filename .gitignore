@@ -1,0 +1,10 @@
+/build/
+/dist/
+__pycache__/
+*.pyc
+*.class
+*.img
+*.zip
+*.dex
+*.jar
+.DS_Store

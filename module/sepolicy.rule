@@ -1,0 +1,7 @@
+allow zygote self capability sys_admin
+allow zygote system_file dir mounton
+type tango32_exec file_type
+typeattribute tango32_exec exec_type
+typeattribute tango32_exec system_file_type
+allow domain tango32_exec file { read open getattr map execute }
+allow { zygote appdomain dex2oat crash_dump shell } tango32_exec file execute_no_trans

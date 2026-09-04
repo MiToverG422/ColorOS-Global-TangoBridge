@@ -1,0 +1,14 @@
+{
+  "id": "cph2841-ex01-500",
+  "model": "CPH2841",
+  "build": "CPH2841_16.0.10.500(EX01)",
+  "ota": "CPH2841_11.A.63_0630_202607311128",
+  "donor": "PMA120_16.0.10.501(CN01)",
+  "ndk": "29.0.14206865",
+  "api": 26,
+  "seed_url": "https://github.com/MiToverG422/ColorOS-Global-TangoBridge/releases/download/runtime-cph2841-ex01-500-v1/FindX9Ultra-Tango32-EX01-500-v0.2.0-test.zip",
+  "seed_sha256": "149898d641e32c13444a0fb40ce7db04d450de56788b66a643495f221f5fedf9",
+  "payload_sha256": "d0de64ef0a40a55ead0f646b0b56b4bf6d0d3c51afacf0d1e30dfa8cbf5eb4d1",
+  "payload_bytes": 536870912,
+  "network_framework_sha256": "6eff44d2aa85ccd0552c32d838f0501526fd00173ebb4315d2eff6b917a30d2e"
+}

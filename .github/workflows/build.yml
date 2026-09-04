@@ -1,0 +1,51 @@
+name: Build module
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Validate build logic and shell syntax
+        run: |
+          python3 -m unittest discover -s tests -v
+          python3 -m py_compile scripts/build.py
+          for script in module/*.sh; do bash -n "$script"; done
+  build:
+    if: github.event_name == 'workflow_dispatch'
+    needs: check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install pinned Android NDK and filesystem tools
+        run: |
+          set -euo pipefail
+          sdkmanager --install 'ndk;29.0.14206865'
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends e2fsprogs
+      - name: Compile and assemble module
+        run: python3 scripts/build.py
+      - name: Upload module ZIP, checksums and build provenance
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ColorOS-Global-TangoBridge-cph2841-ex01-500
+          path: dist/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+      - name: Build summary
+        run: |
+          echo '### Experimental module built' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Only CPH2841 EX01 16.0.10.500 with the pinned network APEX is supported.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'CI validates compilation and packaging, not on-device stability.' >> "$GITHUB_STEP_SUMMARY"
+          cat dist/SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
