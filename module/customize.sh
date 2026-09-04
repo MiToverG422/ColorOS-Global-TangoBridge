@@ -1,5 +1,5 @@
 SKIPUNZIP=0
-ui_print "- ColorOS Global TangoBridge for CPH2841 EX01 500"
+ui_print "- ColorOS Global TangoBridge for 16.0.10.500(EX01)"
 [ "$KSU" = true ] || abort "KernelSU-compatible manager required"
 . "$MODPATH/common.sh"
 guard || abort "Unsupported device/build or Tango kernel interface missing"

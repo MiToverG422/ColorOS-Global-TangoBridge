@@ -22,7 +22,7 @@
     const pending = yes('disabled') || yes('removal');
     const ready = compatible && live && mounts && engine && abi && !pending && yes('boot_complete');
     const checks = [
-      ['系统版本', yes('build_match'), '机型、完整版本与内核接口符合当前适配。', '仅支持 CPH2841 EX01 16.0.10.500。请核对完整版本和内核支持，不要绕过安装检查。'],
+      ['系统版本', yes('build_match'), '设备、完整版本与内核接口通过适配检查。', '适用版本为 16.0.10.500(EX01)。请核对设备适配配置、完整版本和内核支持。'],
       ['网络组件', yes('apex_match'), '网络 framework 校验与适配版本一致。', '网络组件与预期不一致，可能已被 OTA 或系统组件更新替换，需要重新适配。'],
       ['内核转译接口', yes('kernel_interface'), '检测到 Tango 内核接口。', '未检测到 /dev/tango32，当前内核无法提供所需接口。'],
       ['运行库挂载', mounts, '本次开机的镜像与系统库覆盖挂载已就绪。', '本次开机的挂载未完整就绪。安装后请重启；仍异常时查看启动日志。'],

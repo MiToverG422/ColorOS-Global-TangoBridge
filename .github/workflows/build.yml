@@ -52,6 +52,6 @@ jobs:
       - name: Build summary
         run: |
           echo '### Experimental module built' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Only CPH2841 EX01 16.0.10.500 with the pinned network APEX is supported.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Applicable system version: 16.0.10.500(EX01). Compatibility is verified by the module checks.' >> "$GITHUB_STEP_SUMMARY"
           echo 'CI validates compilation and packaging, not on-device stability.' >> "$GITHUB_STEP_SUMMARY"
           cat dist/SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
