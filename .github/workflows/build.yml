@@ -20,6 +20,8 @@ jobs:
           python3 -m py_compile scripts/build.py
           node --test tests/test_health.cjs
           node --check module/webroot/app.js
+          cc -std=gnu11 -Wall -Wextra -Werror -fsanitize=address,undefined tests/test_fd_compat.c -o /tmp/test-fd-compat -ldl
+          /tmp/test-fd-compat
           for script in module/*.sh; do bash -n "$script"; done
   build:
     if: github.event_name == 'workflow_dispatch'
