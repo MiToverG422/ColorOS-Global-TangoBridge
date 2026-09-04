@@ -15,7 +15,7 @@ test('ready requires current evidence, not an old status file', () => {
   }
 });
 test('disabled and removed modules show pending reboot instead of green', () => {
-  assert.equal(analyze({...ready, disabled:'1'}).title, '模块已停用');
+  assert.equal(analyze({...ready, disabled:'1'}).title, 'state.disabled');
   assert.equal(analyze({...ready, removal:'1'}).ready, false);
   assert.equal(analyze({...ready, selinux:'Permissive'}).tone, 'warn');
 });
