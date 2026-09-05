@@ -24,15 +24,19 @@
       timer=null;if(!active||busy)return;busy=true;const generation=epoch;let delay=5000;
       try{const value=await read();if(active&&generation===epoch)receive(value);}
       catch(e){delay=15000;if(active&&generation===epoch)fail(e);}
-      finally{busy=false;later(delay);}
+      // A request from the previous page visit must not postpone the new visit.
+      finally{busy=false;later(generation===epoch?delay:0);}
     }
     return {setActive(value){if(value===active)return;active=value;epoch++;if(timer!==null){cancel(timer);timer=null;}if(active&&!busy)tick();}};
   }
   function status(text){
     const rows=text.trim().split(/\r?\n/);
-    if(rows.shift()!=='CONTROL\t1')throw Error('error.format');
+    const version=rows.shift();
+    if(!['CONTROL\t1','CONTROL\t2'].includes(version))throw Error('error.format');
+    const monotonic=version==='CONTROL\t2';
     const data={};
-    for(const key of ['ENABLED','NOW','SAMPLED','AVAILABLE']){
+    const keys=monotonic?['ENABLED','NOW','UPTIME','SAMPLED','SAMPLE_UPTIME','AVAILABLE']:['ENABLED','NOW','SAMPLED','AVAILABLE'];
+    for(const key of keys){
       const row=(rows.shift()||'').split('\t');
       if(row.length!==2||row[0]!==key||!/^\d+$/.test(row[1])||!Number.isSafeInteger(Number(row[1])))throw Error('error.format');
       data[key.toLowerCase()]=Number(row[1]);
@@ -40,7 +44,8 @@
     if(data.enabled>1||data.available>1)throw Error('error.format');
     data.snapshot=data.available?parse(rows.join('\n')):null;
     if(!data.available&&rows.length)throw Error('error.format');
-    data.fresh=data.available&&data.now>=data.sampled&&data.now-data.sampled<=30;
+    const now=monotonic?data.uptime:data.now,sampled=monotonic?data.sample_uptime:data.sampled;
+    data.fresh=data.available&&now>=sampled&&now-sampled<=30;
     return data;
   }
   root.TangoMonitor={parse,status,poller};

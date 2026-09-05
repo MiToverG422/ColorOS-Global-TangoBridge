@@ -20,3 +20,20 @@ test('UI polling never overlaps and discards results after leaving the page',asy
  assert.equal(received,0);assert.equal(queue.length,1);queue.shift()();assert.equal(reads,2);
  finish({});await new Promise(setImmediate);assert.equal(received,1);p.setActive(false);assert.equal(queue.length,0);
 });
+test('monotonic cache freshness survives wall-clock corrections',()=>{
+ const wrap2=(now,uptime,sampled=100,sampleUptime=50)=>`CONTROL\t2\nENABLED\t1\nNOW\t${now}\nUPTIME\t${uptime}\nSAMPLED\t${sampled}\nSAMPLE_UPTIME\t${sampleUptime}\nAVAILABLE\t1\n${sample}`;
+ assert.equal(M.status(wrap2(1,60)).fresh,true); // clock set backwards
+ assert.equal(M.status(wrap2(900000,60)).fresh,true); // clock set forwards
+ assert.equal(M.status(wrap2(100,80)).fresh,true);
+ assert.equal(M.status(wrap2(100,81)).fresh,false);
+ assert.equal(M.status(wrap2(100,49)).fresh,false);
+ assert.throws(()=>M.status(wrap2(100,60).replace('UPTIME\t60','UPTIME\t-1')));
+ assert.throws(()=>M.status(wrap2(100,60).replace('SAMPLE_UPTIME\t50\n','')));
+});
+test('returning during an old request triggers an immediate replacement read',async()=>{
+ let finish,received=0,scheduled=[];
+ const p=M.poller({read:()=>new Promise(r=>finish=r),receive:()=>received++,fail:()=>assert.fail(),schedule:(fn,delay)=>{scheduled.push({fn,delay});return fn},cancel:()=>{}});
+ p.setActive(true);p.setActive(false);p.setActive(true);finish({});await new Promise(setImmediate);
+ assert.equal(received,0);assert.equal(scheduled.length,1);assert.equal(scheduled[0].delay,0);
+ p.setActive(false);
+});

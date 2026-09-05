@@ -5,12 +5,17 @@ MODDIR=${0%/*}
 [ "$(id -u)" = 0 ] && [ -x "$BB" ] || exit 77
 status() {
   enabled=0; [ ! -f "$DATA/monitor.enabled" ] || enabled=1
-  printf 'CONTROL\t1\nENABLED\t%s\nNOW\t%s\n' "$enabled" "$(date +%s)"
+  # Read the atomically replaced cache once. Capture clocks afterwards so a
+  # concurrent sample cannot appear newer than this status request.
+  cache=$(cat "$DATA/monitor.sample" 2>/dev/null)
   boot=$(cat /proc/sys/kernel/random/boot_id)
-  if [ "$(head -n 1 "$DATA/monitor.sample" 2>/dev/null)" = "$boot" ]; then
-    tail -n +2 "$DATA/monitor.sample"
+  read -r uptime unused < /proc/uptime
+  uptime=${uptime%%.*}
+  printf 'CONTROL\t2\nENABLED\t%s\nNOW\t%s\nUPTIME\t%s\n' "$enabled" "$(date +%s)" "$uptime"
+  if [ "$(printf '%s\n' "$cache" | head -n 2)" = "$(printf '%s\nCACHE\t2' "$boot")" ]; then
+    printf '%s\n' "$cache" | tail -n +3
   else
-    printf 'SAMPLED\t0\nAVAILABLE\t0\n'
+    printf 'SAMPLED\t0\nSAMPLE_UPTIME\t0\nAVAILABLE\t0\n'
   fi
 }
 case "${1:-status}" in

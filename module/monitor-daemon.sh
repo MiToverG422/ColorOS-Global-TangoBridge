@@ -12,8 +12,10 @@ boot=$(cat /proc/sys/kernel/random/boot_id)
 while enabled; do
   sample=$(sh "$MODDIR/monitor.sh")
   result=$?
+  read -r uptime unused < /proc/uptime
+  uptime=${uptime%%.*}
   {
-    printf '%s\nSAMPLED\t%s\n' "$boot" "$(date +%s)"
+    printf '%s\nCACHE\t2\nSAMPLED\t%s\nSAMPLE_UPTIME\t%s\n' "$boot" "$(date +%s)" "$uptime"
     if [ "$result" = 0 ]; then
       printf 'AVAILABLE\t1\n%s\n' "$sample"
     else

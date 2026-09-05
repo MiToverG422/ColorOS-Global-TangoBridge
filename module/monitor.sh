@@ -10,6 +10,11 @@ service=$(getprop init.svc.zygote_tango)
 root=$(getprop init.svc_debug_pid.zygote_tango)
 case "$root" in ''|*[!0-9]*) root=0;; esac
 [ "$service" = running ] || root=0
+# A stopped/missing zygote has no process tree. Avoid a system-wide ps scan.
+if [ "$root" = 0 ]; then
+  printf 'TANGO_MONITOR\t1\nSERVICE\t%s\nROOT\t0\nSUMMARY\t0\t0\t0\nEND\t1\n' "$service"
+  exit 0
+fi
 snapshot=$(ps -A -o PID,PPID,RSS,NAME) || exit 1
 printf 'TANGO_MONITOR\t1\nSERVICE\t%s\nROOT\t%s\n' "$service" "$root"
 printf '%s\n' "$snapshot" | "$BB" awk -v root="$root" '
