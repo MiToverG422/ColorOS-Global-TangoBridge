@@ -1,0 +1,22 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const M=require('../module/webroot/monitor-core.js');
+const sample='TANGO_MONITOR\t1\nSERVICE\trunning\nROOT\t10\nPROCESS\t10\t1\t1024\tzygote\nPROCESS\t11\t10\t2048\t<app>\nSUMMARY\t1\t2\t3072\nEND\t1';
+const wrap=(time=100,enabled=1)=>`CONTROL\t1\nENABLED\t${enabled}\nNOW\t${time}\nSAMPLED\t100\nAVAILABLE\t1\n${sample}`;
+test('snapshot protocol rejects truncation and invalid counts',()=>{
+ assert.equal(M.parse(sample).count,2);assert.equal(M.parse(sample).processes[1].name,'<app>');
+ for(const bad of [sample.slice(0,-2),sample.replace('SUMMARY\t1\t2','SUMMARY\t1\t3'),sample.replace('1024','NaN'),sample.replace('ROOT\t10','ROOT\t9007199254740992')])assert.throws(()=>M.parse(bad));
+});
+test('cache status distinguishes stale, future, disabled and missing data',()=>{
+ assert.equal(M.status(wrap(130)).fresh,true);assert.equal(M.status(wrap(131)).fresh,false);
+ assert.equal(M.status(wrap(99)).fresh,false);assert.equal(M.status(wrap(100,0)).enabled,0);
+ assert.equal(M.status('CONTROL\t1\nENABLED\t0\nNOW\t100\nSAMPLED\t0\nAVAILABLE\t0').snapshot,null);
+ assert.throws(()=>M.status(wrap(100,2)));assert.throws(()=>M.status(wrap().replace('AVAILABLE\t1','AVAILABLE\t0')));
+});
+test('UI polling never overlaps and discards results after leaving the page',async()=>{
+ let finish,reads=0,received=0,queue=[];
+ const p=M.poller({read:()=>{reads++;return new Promise(r=>finish=r)},receive:()=>received++,fail:()=>assert.fail(),schedule:(fn)=>{queue.push(fn);return fn},cancel:fn=>{queue=queue.filter(f=>f!==fn)}});
+ p.setActive(true);p.setActive(true);assert.equal(reads,1);
+ p.setActive(false);p.setActive(true);assert.equal(reads,1);finish({});await new Promise(setImmediate);
+ assert.equal(received,0);assert.equal(queue.length,1);queue.shift()();assert.equal(reads,2);
+ finish({});await new Promise(setImmediate);assert.equal(received,1);p.setActive(false);assert.equal(queue.length,0);
+});

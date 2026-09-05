@@ -10,3 +10,4 @@ while [ "$(getprop sys.boot_completed)" != 1 ]; do
 done
 [ ! -f "$MODDIR/disable" ] && [ ! -f "$MODDIR/remove" ] || exit 0
 "$BB" nsenter -t 1 -m sh "$MODDIR/start.sh" "$MODDIR" >> "$DATA/startup.log" 2>&1
+sh "$MODDIR/monitor-control.sh" restore >/dev/null 2>&1

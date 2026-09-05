@@ -1,5 +1,6 @@
 SKIPUNZIP=0
 ui_print "- ColorOS Global TangoBridge for 16.0.10.500(EX01)"
+ui_print "- Currently supports Snapdragon processors only."
 [ "$KSU" = true ] || abort "KernelSU-compatible manager required"
 . "$MODPATH/common.sh"
 guard || abort "Unsupported device/build or Tango kernel interface missing"

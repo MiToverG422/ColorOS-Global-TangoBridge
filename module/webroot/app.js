@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id), I = TangoI18n, t = I.t;
-  const pages = ['overview','checks','diagnostics','settings'];
+  const pages = ['overview','checks','monitor','diagnostics','settings'];
   const commands = Object.freeze({snapshot:'sh /data/adb/modules/tango32_findx9u/diagnose.sh',logs:'/data/adb/ksu/bin/busybox timeout 5 /data/adb/ksu/bin/busybox tail -n 120 /data/adb/tango32_findx9u/startup.log'});
   let snapshot = null, busy = false, failed = false, counter = 0, noticeKey = '', noticeValues = {};
   const bridgeAvailable = () => window.ksu && typeof window.ksu.exec === 'function';
@@ -13,7 +13,7 @@
     pages.forEach(p=>$(`page-${p}`).hidden=p!==name);
     document.querySelectorAll('[data-page]').forEach(a=>{if(a.dataset.page===name)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
     $('hero-title').textContent=t(name);document.title=`TangoBridge · ${t(name)}`;
-    document.querySelector('.toolbar').hidden=name==='settings';
+    document.querySelector('.toolbar').hidden=['settings','monitor'].includes(name);
     if(focus){scrollTo(0,0);$('hero-title').focus({preventScroll:true});}
   }
   window.addEventListener('hashchange',()=>showPage(true));
@@ -85,6 +85,7 @@
     $('language').value=I.preference;$('refresh').textContent=t(busy?'loading':'refresh');
     $('fullscreen-hint').textContent=t($('fullscreen').disabled?'fullscreenUnavailable':'fullscreenHint');
     showPage();if(snapshot)render();else if(failed)renderFailure();notice(noticeKey,noticeValues);
+    window.dispatchEvent(new Event('tango:language'));
   }
   $('language').addEventListener('change',()=>{I.set($('language').value);translate();});
   window.addEventListener('languagechange',()=>{if(I.preference==='auto')translate();});

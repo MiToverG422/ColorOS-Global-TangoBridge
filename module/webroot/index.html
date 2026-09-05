@@ -11,6 +11,8 @@
   <script defer src="i18n.js"></script>
   <script defer src="health.js"></script>
   <script defer src="app.js"></script>
+  <script defer src="monitor-core.js"></script>
+  <script defer src="monitor.js"></script>
 </head>
 <body>
 <main>
@@ -34,17 +36,27 @@
   <div id="page-diagnostics" class="page" hidden>
   <section class="panel"><div class="section-heading"><h2 data-i18n="diagnostics">诊断</h2></div><p class="muted" data-i18n="privacy">分享日志前，请检查应用路径等信息。</p><div class="tools"><button id="report" disabled data-i18n="report">生成摘要</button><button id="logs" disabled data-i18n="logs">启动日志</button></div><div id="report-box" hidden><label for="report-text" data-i18n="reportTitle">诊断摘要</label><textarea id="report-text" readonly rows="10"></textarea><button id="copy" data-i18n="copy">复制</button></div><details id="log-box" hidden><summary data-i18n="logTitle">最近 120 行</summary><pre id="log-text"></pre></details></section>
   </div>
+  <div id="page-monitor" class="page" hidden>
+    <section class="panel">
+      <label class="setting-row" for="monitor-toggle"><span><span data-i18n="monitor.background">后台监控</span><small data-i18n="monitor.hint">默认关闭 · 开启后重启恢复</small></span><input id="monitor-toggle" type="checkbox" role="switch" disabled></label>
+      <p id="monitor-status" role="status"></p><small id="monitor-time" class="muted">—</small>
+    </section>
+    <div class="metrics"><article><span data-i18n="runtime">32 位服务</span><strong id="monitor-service">—</strong></article><article><span data-i18n="monitor.count">进程数</span><strong id="monitor-count">—</strong></article><article><span data-i18n="monitor.memory">RSS 合计</span><strong id="monitor-memory">—</strong></article></div>
+    <section class="panel"><h2 data-i18n="monitor.tree">Tango 进程树</h2><p class="muted" data-i18n="monitor.scope">包含 zygote 及子进程；RSS 含共享内存重复计数。</p><div id="monitor-processes"></div><p id="monitor-limit" data-i18n="monitor.limit" hidden>仅展示前 100 项，合计包含全部进程。</p></section>
+    <footer data-i18n="monitor.cost">每 10 秒采样 · 仅保存最新结果 · 不阻止休眠</footer>
+  </div>
   <div id="page-settings" class="page" hidden>
     <section class="panel settings-panel">
       <label class="setting-row" for="language"><span data-i18n="language">语言</span><select id="language"><option value="auto" data-i18n="auto">跟随系统</option><option value="zh-CN">简体中文</option><option value="en">English</option></select></label>
       <label class="setting-row" for="fullscreen"><span><span data-i18n="fullscreen">全屏显示</span><small id="fullscreen-hint" data-i18n="fullscreenHint">默认关闭</small></span><input id="fullscreen" type="checkbox" role="switch"></label>
     </section>
-    <footer><span data-i18n="applicable">适用版本</span> · 16.0.10.500(EX01)</footer>
+    <footer><p data-i18n="snapdragon">目前仅支持骁龙处理器</p><span data-i18n="applicable">适用版本</span> · 16.0.10.500(EX01)</footer>
   </div>
 </main>
 <nav class="bottom-nav" aria-label="TangoBridge">
   <a href="#overview" data-page="overview" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span data-i18n="overview">概览</span></a>
   <a href="#checks" data-page="checks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 7v5c0 5-9 9-9 9s-9-4-9-9V7Z"/><path d="m8 12 3 3 5-6"/></svg><span data-i18n="checks">检测</span></a>
+  <a href="#monitor" data-page="monitor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h5l3-8 4 16 3-8h5"/></svg><span data-i18n="monitor">监控</span></a>
   <a href="#diagnostics" data-page="diagnostics"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m8 9 3 3-3 3m5 0h3"/></svg><span data-i18n="diagnostics">诊断</span></a>
   <a href="#settings" data-page="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span data-i18n="settings">设置</span></a>
 </nav>
