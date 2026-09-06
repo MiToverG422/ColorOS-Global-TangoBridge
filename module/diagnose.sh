@@ -37,6 +37,21 @@ flag apex_match runtime_guard
 emit network_hash "$network_hash"
 emit network_candidate "$NETWORK_MODE"
 emit network_mode "$(cat "$STATE/network-mode" 2>/dev/null)"
+emit network_schema 1
+network_read_state
+emit network_stage "$NET_STAGE"
+emit network_reason "$NET_REASON"
+emit network_seconds "$NET_SECONDS"
+emit network_time "$NET_TIME"
+emit network_key "${network_key:-}"
+active_key=$(cat "$STATE/network-key" 2>/dev/null)
+emit network_active_key "$active_key"
+flag network_active_match test -n "$active_key" -a "$active_key" = "${network_key:-}"
+flag network_jni test -n "$active_key" -a "$(cat "$STATE/network-jni" 2>/dev/null)" = "$active_key"
+cache_count=0
+for cache_dir in "$NETWORK_CACHE"/*; do [ ! -d "$cache_dir" ] || cache_count=$((cache_count+1)); done
+emit network_cache_count "$cache_count"
+flag network_cache_valid test "$NETWORK_MODE" = dynamic
 flag current_boot test "$(cat "$STATE/boot-id" 2>/dev/null)" = "$(cat /proc/sys/kernel/random/boot_id)"
 flag image_mounted grep -Fq " $IMAGE " /proc/self/mountinfo
 flag system_overlay grep -q ' /system/lib .* - overlay ' /proc/self/mountinfo

@@ -6,6 +6,7 @@ STATE=$DATA/runtime
 IMAGE=$DATA/image
 NETWORK_SOURCE=/apex/com.android.tethering/javalib
 NETWORK_CACHE=$DATA/network-cache
+. "${MODPATH:-${MODDIR}}/network-state.sh"
 network_fingerprint() {
   network_inputs=$(cd "$NETWORK_SOURCE" && sha256sum ./*.jar) || return 1
   network_tools=$(cd "$MODDIR/network-tools" && sha256sum donor.jar network-merger.jar) || return 1

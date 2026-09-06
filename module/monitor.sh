@@ -7,16 +7,22 @@ if [ "${1:-}" != --inside ]; then
   exec "$BB" timeout 8 "$BB" nsenter -t 1 -m sh "$0" --inside
 fi
 service=$(getprop init.svc.zygote_tango)
+DATA=/data/adb/tango32_findx9u
+NET_STAGE=unknown NET_REASON=none NET_SECONDS=0
+if [ -f "${0%/*}/network-state.sh" ]; then
+  . "${0%/*}/network-state.sh"
+  network_read_state
+fi
 root=$(getprop init.svc_debug_pid.zygote_tango)
 case "$root" in ''|*[!0-9]*) root=0;; esac
 [ "$service" = running ] || root=0
 # A stopped/missing zygote has no process tree. Avoid a system-wide ps scan.
 if [ "$root" = 0 ]; then
-  printf 'TANGO_MONITOR\t1\nSERVICE\t%s\nROOT\t0\nSUMMARY\t0\t0\t0\nEND\t1\n' "$service"
+  printf 'TANGO_MONITOR\t1\nNETWORK\t%s\t%s\t%s\nSERVICE\t%s\nROOT\t0\nSUMMARY\t0\t0\t0\nEND\t1\n' "$NET_STAGE" "$NET_REASON" "$NET_SECONDS" "$service"
   exit 0
 fi
 snapshot=$(ps -A -o PID,PPID,RSS,NAME) || exit 1
-printf 'TANGO_MONITOR\t1\nSERVICE\t%s\nROOT\t%s\n' "$service" "$root"
+printf 'TANGO_MONITOR\t1\nNETWORK\t%s\t%s\t%s\nSERVICE\t%s\nROOT\t%s\n' "$NET_STAGE" "$NET_REASON" "$NET_SECONDS" "$service" "$root"
 printf '%s\n' "$snapshot" | "$BB" awk -v root="$root" '
 NR>1 && $1 ~ /^[0-9]+$/ && $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9]+$/ {
   pid=$1; parent[pid]=$2; rss[pid]=$3; name[pid]=$4;

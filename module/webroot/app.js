@@ -3,7 +3,7 @@
   'use strict';
   const $ = id => document.getElementById(id), I = TangoI18n, t = I.t;
   const pages = ['overview','checks','monitor','diagnostics','settings'];
-  const commands = Object.freeze({snapshot:'sh /data/adb/modules/tango32_findx9u/diagnose.sh',logs:'/data/adb/ksu/bin/busybox timeout 5 /data/adb/ksu/bin/busybox tail -n 120 /data/adb/tango32_findx9u/startup.log'});
+  const commands = Object.freeze({snapshot:'sh /data/adb/modules/tango32_findx9u/diagnose.sh',logs:'sh /data/adb/modules/tango32_findx9u/diagnostic-log.sh'});
   let snapshot = null, busy = false, failed = false, counter = 0, noticeKey = '', noticeValues = {};
   const bridgeAvailable = () => window.ksu && typeof window.ksu.exec === 'function';
   const element = (tag,text,cls) => {const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e;};
@@ -63,6 +63,13 @@
     $('version').textContent=d.module_version||'—';$('updated').textContent=t('updated',{time:d.collected_at||'—'});
     const sec=Number(d.uptime);
     rows('device',[['model',d.model],['build',d.build],['soc',d.soc]]);
+    rows('network-details',[
+      ['network.stage',t(`network.stage.${d.network_stage||'unknown'}`)],
+      ['network.reason',t(`network.reason.${d.network_reason||'none'}`)],
+      ['network.cache',`${d.network_cache_count||'0'} / 8`],
+      ['network.duration',`${d.network_seconds||'0'} s`],
+      ['network.selected',d.network_active_key?.slice(0,12)||'—']
+    ]);
     rows('device-extra',[['Android',`${d.android||'—'} · API ${d.sdk||'—'}`],['uptime',Number.isFinite(sec)?t('duration',{h:Math.floor(sec/3600),m:Math.floor(sec%3600/60)}):'—'],['abi',d.abi32||t('notDeclared')],['kernel',d.kernel]]);
     $('check-count').textContent=t('count',{pass:h.checks.filter(c=>c.ok).length,total:h.checks.length});
     $('checks').replaceChildren(...h.checks.map(c=>{
@@ -77,7 +84,7 @@
     $('overview').className='overview warn';$('status-mark').textContent='!';$('status-title').textContent=t('state.error');$('status-description').textContent=t('hint.error');
     ['compat','runtime','selinux'].forEach(id=>$(id).textContent=t('unknown'));
     $('updated').textContent='—';$('check-count').textContent='—';$('checks').replaceChildren(element('p',t('waiting'),'placeholder'));
-    $('device').replaceChildren();$('device-extra').replaceChildren();$('version').textContent='—';$('report').disabled=true;
+    $('device').replaceChildren();$('device-extra').replaceChildren();$('network-details').replaceChildren();$('version').textContent='—';$('report').disabled=true;
   }
   function translate() {
     document.documentElement.lang=I.language();
@@ -104,9 +111,10 @@
   });
   $('logs').addEventListener('click',async()=>{
     $('logs').disabled=true;notice();
-    try{$('log-text').textContent=await execute(commands.logs)||t('emptyLog');$('log-box').hidden=false;$('log-box').open=true;}
+    try{const kind=$('log-kind').value;if(!['startup','prepare','probe'].includes(kind))throw Error('error.format');$('log-text').textContent=await execute(`${commands.logs} ${kind}`)||t('emptyLog');$('log-box').hidden=false;$('log-box').open=true;}
     catch(e){$('log-box').hidden=true;notice(I.messages.en[e.message]?e.message:'error.unknown',{code:e.code??'?'});}
     finally{$('logs').disabled=false;}
   });
+  $('log-kind').addEventListener('change',()=>{$('log-box').hidden=true;});
   translate();fullscreen(false);refresh();
 })();

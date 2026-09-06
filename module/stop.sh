@@ -14,6 +14,7 @@ if [ -f "$STATE/boot-id" ] && [ "$(cat "$STATE/boot-id")" = "$(cat /proc/sys/ker
   if [ -f "$STATE/binfmt-mounted" ]; then "$BB" umount /proc/sys/fs/binfmt_misc 2>/dev/null; fi
 fi
 rm -f "$STATE/binfmt-registered" "$STATE/binfmt-mounted"
-rm -f "$STATE/network-mode"
+rm -f "$STATE/network-mode" "$STATE/network-key" "$STATE/network-jni"
 restore_props
 echo STOPPED > "$DATA/status"
+network_event stopped

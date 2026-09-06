@@ -4,24 +4,30 @@ MODDIR=${1:?module directory required}
 . "$MODDIR/common.sh"
 guard || { echo UNSUPPORTED_BUILD; exit 1; }
 mkdir -p "$STATE" "$IMAGE"
+NETWORK_BEGIN=$(cut -d. -f1 /proc/uptime)
 BOOT=$(cat /proc/sys/kernel/random/boot_id)
 if [ -f "$STATE/boot-id" ] && [ "$(cat "$STATE/boot-id")" = "$BOOT" ] && [ -s "$STATE/mounts.list" ]; then
   echo ALREADY_MOUNTED; exit 0
 fi
 if ! sh "$MODDIR/network-prepare.sh" > "$DATA/network-prepare.log" 2>&1; then
+  network_read_state
+  [ "$NET_STAGE" = failed ] || network_event failed prepare_timeout
   echo NETWORK_PREPARE_FAILED | tee "$DATA/status"
   cat "$DATA/network-prepare.log"
   restore_props; exit 1
 fi
 runtime_guard && [ "$NETWORK_MODE" = dynamic ] || { echo UNSUPPORTED_NETWORK_APEX | tee "$DATA/status"; restore_props; exit 1; }
+network_event mounting
 printf '%s\n' "$BOOT" > "$STATE/boot-id"
-rm -f "$STATE/binfmt-mounted" "$STATE/binfmt-registered"
+rm -f "$STATE/binfmt-mounted" "$STATE/binfmt-registered" "$STATE/network-jni"
 : > "$STATE/mounts.list"
 echo STARTING > "$DATA/status"
 probing=0
+failure_reason=mounts
 fail() {
-  [ "$probing" != 1 ] || touch "$NETWORK_COMPAT/startup-failed"
+  [ "$probing" != 1 ] || touch "$NETWORK_COMPAT/startup-failed" || true
   sh "$MODDIR/stop.sh" "$MODDIR"
+  network_event failed "$failure_reason"
   echo FAILED > "$DATA/status"
 }
 trap fail EXIT
@@ -41,6 +47,7 @@ if [ -n "$NETWORK_COMPAT" ]; then
   printf '%s\n' "$network_target" >> "$STATE/mounts.list"
   "$BB" mount -o remount,bind,ro "$network_target"
   printf '%s\n' "$NETWORK_MODE" > "$STATE/network-mode"
+  printf '%s\n' "$network_key" > "$STATE/network-key"
 fi
 props
 if ! grep -q ' /proc/sys/fs/binfmt_misc ' /proc/self/mountinfo; then
@@ -55,11 +62,15 @@ else
 fi
 /system_ext/bin/tango_translator "$IMAGE/tests/arm32_probe"
 probing=1
+failure_reason=jni
+network_event probing
 if ! CLASSPATH=$MODDIR/network-tools/network-merger.jar "$BB" timeout 25 /system/bin/app_process32 /system/bin NetworkNativeProbe > "$DATA/network-probe.log" 2>&1; then
   cat "$DATA/network-probe.log"; exit 1
 fi
 grep -q '^NETWORK_JNI_LOAD_OK$' "$DATA/network-probe.log" || exit 1
 echo NETWORK_JNI_LOAD_OK
+printf '%s\n' "$network_key" > "$STATE/network-jni"
+failure_reason=zygote
 setprop ctl.start zygote_tango
 i=0
 while ! "$MODDIR/zygote_probe"; do
@@ -69,5 +80,6 @@ done
 sleep 4
 [ "$(getprop init.svc.zygote_tango)" = running ] || exit 1
 echo READY > "$DATA/status"
+network_event ready
 trap - EXIT
 echo TANGO32_READY

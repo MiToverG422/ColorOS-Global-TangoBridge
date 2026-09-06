@@ -37,3 +37,12 @@ test('returning during an old request triggers an immediate replacement read',as
  assert.equal(received,0);assert.equal(scheduled.length,1);assert.equal(scheduled[0].delay,0);
  p.setActive(false);
 });
+
+test('network progress is optional for legacy samples and validated when present',()=>{
+  const base='TANGO_MONITOR\t1\nSERVICE\tstopped\nROOT\t0\nSUMMARY\t0\t0\t0\nEND\t1';
+  const parse=require('../module/webroot/monitor-core.js').parse;
+  assert.equal(parse(base).network,undefined);
+  const value=base.replace('SERVICE','NETWORK\tgenerating\tnone\t2\nSERVICE');
+  assert.deepEqual(parse(value).network,{stage:'generating',reason:'none',seconds:2});
+  assert.throws(()=>parse(value.replace('none\t2','none\t-1')));
+});

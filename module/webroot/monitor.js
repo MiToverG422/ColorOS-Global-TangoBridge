@@ -21,6 +21,8 @@
     $('monitor-service').textContent=snapshot?t(snapshot.service==='running'?'running':snapshot.service==='stopped'?'monitor.stopped':'unknown'):'—';
     $('monitor-count').textContent=snapshot?String(snapshot.count):'—';
     $('monitor-memory').textContent=snapshot?`${(snapshot.rss/1024).toFixed(1)} MiB`:'—';
+    const net=snapshot?.network;
+    $('monitor-network').textContent=net?`${t('network.stage.'+net.stage)} · ${net.seconds} s${net.reason==='none'?'':' · '+t('network.reason.'+net.reason)}`:'—';
     $('monitor-processes').replaceChildren();
     if(snapshot?.found){
       snapshot.processes.forEach(p=>{

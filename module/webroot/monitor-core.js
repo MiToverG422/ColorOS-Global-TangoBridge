@@ -9,6 +9,7 @@
     for(const row of lines.slice(1,-1)){
       if(row[0]!=='PROCESS'){if(seen.has(row[0]))throw Error('error.format');seen.add(row[0]);}
       if(row[0]==='SERVICE'&&row.length===2)data.service=row[1];
+      else if(row[0]==='NETWORK'&&row.length===4&&/^[a-z]+$/.test(row[1])&&/^[a-z_]+$/.test(row[2]))data.network={stage:row[1],reason:row[2],seconds:number(row[3])};
       else if(row[0]==='ROOT'&&row.length===2)data.root=number(row[1]);
       else if(row[0]==='PROCESS'&&row.length===5){if(data.processes.length>=100)throw Error('error.format');data.processes.push({pid:number(row[1]),ppid:number(row[2]),rss:number(row[3]),name:row[4]});}
       else if(row[0]==='SUMMARY'&&row.length===4){data.found=number(row[1]);data.count=number(row[2]);data.rss=number(row[3]);}

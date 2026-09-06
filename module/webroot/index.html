@@ -31,15 +31,17 @@
   <section class="panel"><div class="section-heading"><h2 data-i18n="device">设备</h2><span id="version" class="muted">—</span></div><dl id="device" class="device"></dl><details class="more"><summary data-i18n="details">更多信息</summary><dl id="device-extra" class="device"></dl></details></section>
   </div>
   <div id="page-checks" class="page" hidden>
+  <section class="panel"><h2 data-i18n="network.title">网络自动适配</h2><dl id="network-details" class="device"></dl><p class="muted" data-i18n="network.scope">启动时适配 · 检测不生成文件或重启服务</p></section>
   <section class="panel"><div class="section-heading"><h2 data-i18n="checks">检测</h2><span id="check-count" class="muted">—</span></div><div id="checks"><p class="placeholder" data-i18n="waiting">尚未检测</p></div></section>
   </div>
   <div id="page-diagnostics" class="page" hidden>
-  <section class="panel"><div class="section-heading"><h2 data-i18n="diagnostics">诊断</h2></div><p class="muted" data-i18n="privacy">分享日志前，请检查应用路径等信息。</p><div class="tools"><button id="report" disabled data-i18n="report">生成摘要</button><button id="logs" disabled data-i18n="logs">启动日志</button></div><div id="report-box" hidden><label for="report-text" data-i18n="reportTitle">诊断摘要</label><textarea id="report-text" readonly rows="10"></textarea><button id="copy" data-i18n="copy">复制</button></div><details id="log-box" hidden><summary data-i18n="logTitle">最近 120 行</summary><pre id="log-text"></pre></details></section>
+  <section class="panel"><div class="section-heading"><h2 data-i18n="diagnostics">诊断</h2></div><p class="muted" data-i18n="privacy">分享日志前，请检查应用路径等信息。</p><div class="tools"><button id="report" disabled data-i18n="report">生成摘要</button><label for="log-kind" data-i18n="network.logType">日志类型</label><select id="log-kind"><option value="startup" data-i18n="network.logStartup">启动</option><option value="prepare" data-i18n="network.logPrepare">适配生成</option><option value="probe" data-i18n="network.logProbe">网络 JNI</option></select><button id="logs" disabled data-i18n="logs">启动日志</button></div><div id="report-box" hidden><label for="report-text" data-i18n="reportTitle">诊断摘要</label><textarea id="report-text" readonly rows="10"></textarea><button id="copy" data-i18n="copy">复制</button></div><details id="log-box" hidden><summary data-i18n="logTitle">最近 120 行</summary><pre id="log-text"></pre></details></section>
   </div>
   <div id="page-monitor" class="page" hidden>
     <section class="panel">
       <label class="setting-row" for="monitor-toggle"><span><span data-i18n="monitor.background">后台监控</span><small data-i18n="monitor.hint">默认关闭 · 开启后重启恢复</small></span><input id="monitor-toggle" type="checkbox" role="switch" disabled></label>
       <p id="monitor-status" role="status"></p><small id="monitor-time" class="muted">—</small>
+      <h2 data-i18n="network.title">网络自动适配</h2><p id="monitor-network">—</p><small class="muted" data-i18n="network.monitorHint">最近适配阶段 · 复用后台采样，不扫描 JAR</small>
     </section>
     <div class="metrics"><article><span data-i18n="runtime">32 位服务</span><strong id="monitor-service">—</strong></article><article><span data-i18n="monitor.count">进程数</span><strong id="monitor-count">—</strong></article><article><span data-i18n="monitor.memory">RSS 合计</span><strong id="monitor-memory">—</strong></article></div>
     <section class="panel"><h2 data-i18n="monitor.tree">Tango 进程树</h2><p class="muted" data-i18n="monitor.scope">包含 zygote 及子进程；RSS 含共享内存重复计数。</p><div id="monitor-processes"></div><p id="monitor-limit" data-i18n="monitor.limit" hidden>仅展示前 100 项，合计包含全部进程。</p></section>

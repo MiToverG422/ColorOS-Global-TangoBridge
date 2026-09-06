@@ -16,6 +16,7 @@ class NetworkPrepareTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        shutil.copyfile(ROOT / 'module/network-state.sh', self.root / 'network-state.sh')
         self.data = self.root / 'data'
         self.source = self.root / 'source'
         self.source.mkdir()
@@ -65,6 +66,7 @@ if [ "${MUTATE:-0}" = 1 ]; then echo changed >> "$SOURCE/other.jar"; fi
         second = self.run_prepare()
         self.assertEqual(second.returncode, 0, second.stderr)
         self.assertIn('NETWORK_CACHE_HIT', second.stdout)
+        self.assertEqual((self.data / 'network-state').read_text().splitlines()[1:3], ['cached', 'none'])
         self.assertEqual((self.root / 'trace').read_text(), 'merge\n')
         (self.source / 'other.jar').write_bytes(b'updated')
         self.assertEqual(self.run_prepare().returncode, 0)
@@ -77,6 +79,7 @@ if [ "${MUTATE:-0}" = 1 ]; then echo changed >> "$SOURCE/other.jar"; fi
         result = self.run_prepare()
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('NETWORK_CACHE_CORRUPT', result.stdout)
+        self.assertEqual((self.data / 'network-state').read_text().splitlines()[1:3], ['failed', 'cache_corrupt'])
         self.assertTrue(cache.exists())
 
     def test_merge_failure_and_racing_update_do_not_publish(self):
@@ -109,3 +112,14 @@ if [ "${MUTATE:-0}" = 1 ]; then echo changed >> "$SOURCE/other.jar"; fi
         self.assertEqual(first.returncode, 0, error)
         self.assertEqual(second.returncode, 0, second.stderr)
         self.assertEqual((self.root / 'trace').read_text(), 'merge\n')
+
+    def test_progress_reader_rejects_previous_boot_and_truncated_state(self):
+        self.assertEqual(self.run_prepare().returncode, 0)
+        path = self.data / 'network-state'
+        command = ['sh', '-c', '. "$1/network-state.sh"; DATA="$1/data"; network_read_state; echo "$NET_STAGE"', 'sh', str(self.root)]
+        self.assertEqual(subprocess.check_output(command, text=True).strip(), 'prepared')
+        lines = path.read_text().splitlines()
+        path.write_text('old-boot\n' + '\n'.join(lines[1:]) + '\n')
+        self.assertEqual(subprocess.check_output(command, text=True).strip(), 'unknown')
+        path.write_text('\n'.join(lines[:3]) + '\n')
+        self.assertEqual(subprocess.check_output(command, text=True).strip(), 'unknown')
