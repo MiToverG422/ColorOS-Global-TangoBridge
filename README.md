@@ -48,7 +48,7 @@ python3 scripts/build.py
 
 ## 安装与卸载
 
-### WebUI（0.6.1-test）
+### WebUI（0.6.2-test）
 
 安装后，在支持 WebUI 的 KernelSU 兼容管理器中打开本模块的 **WebUI / 打开** 入口，即可查看中文检测面板。已移除 `action.sh`，仅保留 WebUI 交互入口。
 
@@ -74,6 +74,8 @@ python3 scripts/build.py
 在受支持的设备上，通过 KernelSU 兼容管理器安装模块 ZIP，重启后打开模块 WebUI 查看状态。停用或卸载模块并重启可撤销运行时挂载。模块 ID 保持 `tango32_findx9u`，用于覆盖此前个人测试版。
 
 OTA 后应先停用模块，确认新系统兼容性后再启用。适配其他机型或版本需要重新检查内核接口、init 服务、ART/APEX、运行库及应用实测，仅相同版本号不足以判断兼容。
+
+清除系统数据后，Google Play 系统组件可能恢复为预置版本，即使 ColorOS 版本号不变，网络 APEX 也可能改变。0.6.2 增加预置 `com.android.tethering@361524320` 的 ARM32 Java 适配，并保留原有适配。该配置校验当前网络目录全部五个 JAR 和适配包，只在 ARM32 私有 Java 路径使用匹配文件，不替换全局网络 APEX。未知组件组合仍会拒绝启动；诊断摘要新增实际网络 JAR 哈希，启动失败也会保存明确状态。
 
 ## 目录
 

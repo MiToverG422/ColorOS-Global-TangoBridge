@@ -3,7 +3,7 @@ set -eu
 MODDIR=${1:?module directory required}
 . "$MODDIR/common.sh"
 guard || { echo UNSUPPORTED_BUILD; exit 1; }
-runtime_guard || { echo UNSUPPORTED_NETWORK_APEX; restore_props; exit 1; }
+runtime_guard || { mkdir -p "$DATA"; echo UNSUPPORTED_NETWORK_APEX | tee "$DATA/status"; restore_props; exit 1; }
 mkdir -p "$STATE" "$IMAGE"
 BOOT=$(cat /proc/sys/kernel/random/boot_id)
 if [ -f "$STATE/boot-id" ] && [ "$(cat "$STATE/boot-id")" = "$BOOT" ] && [ -s "$STATE/mounts.list" ]; then
@@ -22,6 +22,15 @@ sh "$MODDIR/label_vendor.sh" "$IMAGE"
 sync
 "$BB" mount -o remount,ro "$IMAGE"
 sh "$MODDIR/mount_runtime.sh" "$IMAGE" "$STATE"
+if [ -n "$NETWORK_COMPAT" ]; then
+  # Only the private ARM32 launcher consumes these jars. The global networking
+  # APEX and the system_server/ARM64 class paths remain unchanged.
+  network_target=/system_ext/tango32/apex-javalib/com.android.tethering
+  chcon -R u:object_r:system_file:s0 "$NETWORK_COMPAT"
+  "$BB" mount --bind "$NETWORK_COMPAT" "$network_target"
+  printf '%s\n' "$network_target" >> "$STATE/mounts.list"
+  "$BB" mount -o remount,bind,ro "$network_target"
+fi
 props
 if ! grep -q ' /proc/sys/fs/binfmt_misc ' /proc/self/mountinfo; then
   "$BB" mount -t binfmt_misc none /proc/sys/fs/binfmt_misc

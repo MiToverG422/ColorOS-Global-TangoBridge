@@ -55,6 +55,44 @@ class BuildTests(unittest.TestCase):
                 self.assertEqual((z.getinfo('webroot/index.html').external_attr >> 16) & 0o777, 0o644)
                 self.assertIsNone(z.testzip())
 
+    def test_network_bundle_pinned_hash_and_entry_validation(self):
+        names = ['framework-connectivity.jar', 'framework-connectivity-b.jar',
+                 'framework-connectivity-t.jar', 'framework-tethering.jar',
+                 'service-connectivity.jar', 'SHA256SUMS', 'ORIGINAL_SHA256SUMS', 'provenance.json']
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            archive = root / 'network.zip'
+            with zipfile.ZipFile(archive, 'w') as z:
+                for name in names:
+                    z.writestr(name, b'fixture')
+            target = root / 'valid'
+            build.extract_network_bundle(archive, target, build.sha256(archive))
+            self.assertEqual(sorted(p.name for p in target.iterdir()), sorted(names))
+            with self.assertRaises(ValueError):
+                build.extract_network_bundle(archive, root / 'bad-hash', '0' * 64)
+            self.assertFalse((root / 'bad-hash').exists())
+            for kind in ['traversal', 'duplicate', 'symlink']:
+                with self.subTest(kind=kind):
+                    with zipfile.ZipFile(archive, 'w') as z:
+                        for name in names:
+                            if name == names[0] and kind == 'traversal':
+                                z.writestr('../escape.jar', b'bad')
+                            elif name == names[0] and kind == 'symlink':
+                                info = zipfile.ZipInfo(name)
+                                info.create_system = 3
+                                info.external_attr = 0o120777 << 16
+                                z.writestr(info, '../escape')
+                            else:
+                                z.writestr(name, b'fixture')
+                        if kind == 'duplicate':
+                            import warnings
+                            with warnings.catch_warnings():
+                                warnings.simplefilter('ignore', UserWarning)
+                                z.writestr(names[0], b'duplicate')
+                    with self.assertRaises(ValueError):
+                        build.extract_network_bundle(archive, root / kind, build.sha256(archive))
+                    self.assertFalse((root / kind).exists())
+
 
 if __name__ == '__main__':
     unittest.main()

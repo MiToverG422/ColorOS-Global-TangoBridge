@@ -92,6 +92,25 @@ def patch_image(image, native, mountpoint):
     run('e2fsck', '-fn', image)
 
 
+def extract_network_bundle(archive, destination, expected_hash):
+    verify_hash(archive, expected_hash)
+    names = {'framework-connectivity.jar', 'framework-connectivity-b.jar',
+             'framework-connectivity-t.jar', 'framework-tethering.jar',
+             'service-connectivity.jar', 'SHA256SUMS', 'ORIGINAL_SHA256SUMS', 'provenance.json'}
+    with zipfile.ZipFile(archive) as z:
+        entries = z.infolist()
+        if len(entries) != len(names) or {i.filename for i in entries} != names:
+            raise ValueError('Unexpected network bundle entries')
+        for entry in entries:
+            mode = stat.S_IFMT(entry.external_attr >> 16)
+            if mode not in (0, stat.S_IFREG) or entry.file_size > 16 * 1024 * 1024:
+                raise ValueError('Invalid network bundle member')
+        destination.mkdir(parents=True, exist_ok=True)
+        for entry in entries:
+            with z.open(entry) as src, (destination / entry.filename).open('wb') as dst:
+                shutil.copyfileobj(src, dst)
+
+
 def write_zip(stage, destination):
     with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as z:
         for path in sorted(stage.rglob('*')):
@@ -140,6 +159,11 @@ def main():
     image = stage / 'payload.img'
     extract_payload(seed, image, profile)
     patch_image(image, native, build / 'mount')
+    network_archive = build / 'network-factory-361524320-v1.zip'
+    if not network_archive.exists() or sha256(network_archive) != profile['network_factory_bundle_sha256']:
+        urllib.request.urlretrieve(profile['network_factory_bundle_url'], network_archive)
+    extract_network_bundle(network_archive, stage / 'network/factory-361524320',
+                           profile['network_factory_bundle_sha256'])
     shutil.copyfile(native / 'zygote_probe', stage / 'zygote_probe')
     (stage / 'payload.sha256').write_text(f'{sha256(image)}  payload.img\n')
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()

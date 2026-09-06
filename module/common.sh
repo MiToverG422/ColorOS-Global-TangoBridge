@@ -11,7 +11,17 @@ guard() {
   [ -c /dev/tango32 ] && [ -x "$BB" ]
 }
 runtime_guard() {
-  [ "$(sha256sum /apex/com.android.tethering/javalib/framework-connectivity.jar | cut -d' ' -f1)" = 6eff44d2aa85ccd0552c32d838f0501526fd00173ebb4315d2eff6b917a30d2e ]
+  NETWORK_COMPAT=
+  network_hash=$(sha256sum /apex/com.android.tethering/javalib/framework-connectivity.jar | cut -d' ' -f1)
+  case "$network_hash" in
+    6eff44d2aa85ccd0552c32d838f0501526fd00173ebb4315d2eff6b917a30d2e) return 0 ;;
+    e0011823d4086d6189965688d263fc92309a64e6186b1bf5fd93a5b69fb3909f)
+      NETWORK_COMPAT=$MODDIR/network/factory-361524320
+      (cd "$NETWORK_COMPAT" && sha256sum -c SHA256SUMS >/dev/null) || return 1
+      (cd /apex/com.android.tethering/javalib && sha256sum -c "$NETWORK_COMPAT/ORIGINAL_SHA256SUMS" >/dev/null) || return 1
+      ;;
+    *) return 1 ;;
+  esac
 }
 props() {
   mkdir -p "$DATA"
