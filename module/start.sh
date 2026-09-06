@@ -77,8 +77,11 @@ while ! "$MODDIR/zygote_probe"; do
   i=$((i+1)); [ "$i" -lt 25 ] || exit 1
   sleep 1
 done
+started_identity=$(zygote_identity) || exit 1
 sleep 4
 [ "$(getprop init.svc.zygote_tango)" = running ] || exit 1
+[ "$started_identity" = "$(zygote_identity)" ] || exit 1
+printf '%s\n' "$started_identity" > "$STATE/zygote-identity"
 echo READY > "$DATA/status"
 network_event ready
 trap - EXIT

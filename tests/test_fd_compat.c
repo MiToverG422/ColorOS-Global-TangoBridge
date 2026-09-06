@@ -69,6 +69,13 @@ int main(void) {
     assert(test_readlink("/proc/self/fd/9", buffer, 3) == 3);
     assert(!memcmp(buffer, "/co", 3) && buffer[3] == 'X');
     assert(test_readlink("/not-a-link", buffer, 3) == -1 && errno == EINVAL);
+    short_path = "/system_ext/tango32/apex-javalib/com.android.tethering/framework-connectivity.jar";
+    resolved = "/apex/com.android.tethering/javalib/framework-connectivity.jar";
+    normal_path = 1;
+    expect(resolved); /* A reachable bind source still needs its standard APEX alias. */
+    stale = 1; expect(short_path); /* Never alias a different device/inode. */
+    stale = 0; reused_fd = 1; expect(short_path);
+    reused_fd = 0; missing = 1; expect(short_path);
     puts("PASS: cache hit, changed device, reused fd, removed file, normal path, truncation, errno");
     return 0;
 }

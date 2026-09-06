@@ -10,7 +10,8 @@
     }
     const required = ['model', 'build', 'ota', 'build_match', 'apex_match', 'service', 'probe_code', 'image_mounted', 'system_overlay', 'binfmt', 'translator', 'current_boot', 'abi32', 'disabled', 'removal', 'kernel_interface', 'selinux', 'boot_complete'];
     if (data.schema !== '1' || data.complete !== '1' || required.some(k => !Object.hasOwn(data, k))) throw new Error('error.incomplete');
-    if(data.network_schema==='1'&&['network_cache_valid','network_active_match','network_jni','network_mode','network_stage','network_reason'].some(k=>!Object.hasOwn(data,k)))throw new Error('error.incomplete');
+    if(['1','2'].includes(data.network_schema)&&['network_cache_valid','network_active_match','network_jni','network_mode','network_stage','network_reason'].some(k=>!Object.hasOwn(data,k)))throw new Error('error.incomplete');
+    if(data.network_schema==='2'&&!Object.hasOwn(data,'network_service_match'))throw new Error('error.incomplete');
     return data;
   }
   function analyze(d) {
@@ -21,8 +22,9 @@
     const mounts = yes('image_mounted') && yes('system_overlay') && yes('current_boot');
     const engine = yes('binfmt') && yes('translator');
     const pending = yes('disabled') || yes('removal');
-    const dynamic = d.network_schema === '1';
-    const network = !dynamic || (yes('network_cache_valid') && yes('network_active_match') && yes('network_jni') && d.network_mode === 'dynamic');
+    const dynamic = ['1','2'].includes(d.network_schema);
+    const instance = d.network_schema !== '2' || yes('network_service_match');
+    const network = !dynamic || (instance && yes('network_cache_valid') && yes('network_active_match') && yes('network_jni') && d.network_mode === 'dynamic');
     const ready = compatible && network && live && mounts && engine && abi && !pending && yes('boot_complete');
     const checks = [
       ['system', yes('build_match')], ['apex', yes('apex_match')],
@@ -31,6 +33,7 @@
       ['selinux', d.selinux === 'Enforcing']
     ];
     if(dynamic)checks.splice(2,0,['cache',yes('network_cache_valid')],['active',yes('network_active_match')&&mounts],['jni',yes('network_jni')&&mounts]);
+    if(d.network_schema==='2')checks.push(['instance',instance&&mounts]);
     const items=checks.map(([key, ok]) => ({label: `check.${key}`, ok, detail: `fix.${key}`, tone: ok ? 'ok' : 'warn'}));
     let title = 'state.waiting', description = 'hint.waiting', tone = 'warn';
     if (ready) { title = 'state.ready'; description = 'hint.ready'; tone = 'ok'; }

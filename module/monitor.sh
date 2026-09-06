@@ -16,6 +16,12 @@ fi
 root=$(getprop init.svc_debug_pid.zygote_tango)
 case "$root" in ''|*[!0-9]*) root=0;; esac
 [ "$service" = running ] || root=0
+if [ "$NET_STAGE" = ready ] && [ -f "$DATA/runtime/zygote-identity" ]; then
+  read -r verified_identity < "$DATA/runtime/zygote-identity"
+  if [ "$verified_identity" != "$(zygote_identity "$root" 2>/dev/null)" ]; then
+    NET_STAGE=failed NET_REASON=service_restarted
+  fi
+fi
 # A stopped/missing zygote has no process tree. Avoid a system-wide ps scan.
 if [ "$root" = 0 ]; then
   printf 'TANGO_MONITOR\t1\nNETWORK\t%s\t%s\t%s\nSERVICE\t%s\nROOT\t0\nSUMMARY\t0\t0\t0\nEND\t1\n' "$NET_STAGE" "$NET_REASON" "$NET_SECONDS" "$service"

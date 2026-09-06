@@ -2,6 +2,7 @@
 (function(root) {
   const messages = {
     'zh-CN': {
+      'check.instance':'服务实例未重启','fix.instance':'32 位服务已重启或尚未验证，请查看崩溃日志。','network.reason.service_restarted':'已验证的服务退出或重启',
       'network.reason.prepare_timeout':'准备过程超时或中断',
       "network.title":"网络自动适配",
       "network.scope":"启动时适配 · 检测不生成文件或重启服务",
@@ -70,7 +71,7 @@
       reportTitle:'诊断摘要',logTitle:'最近 120 行',emptyLog:'暂无日志',privacy:'分享日志前，请检查应用路径等信息。',
       language:'语言',auto:'跟随系统',fullscreen:'全屏显示',fullscreenHint:'默认关闭',fullscreenUnavailable:'管理器不支持全屏',
       applicable:'适用版本',details:'更多信息',checkHint:'仅异常项显示处理建议',copied:'已复制',copyManual:'已选中，请长按复制',
-      'state.waiting':'尚未就绪','hint.waiting':'请查看检测页。','state.ready':'运行正常','hint.ready':'32 位服务已就绪。',
+      'state.waiting':'尚未就绪','hint.waiting':'请查看检测页。','state.ready':'运行环境就绪','hint.ready':'环境检查通过，不代表所有 App 兼容。',
       'state.security':'请检查 SELinux','state.booting':'正在启动','hint.booting':'稍后刷新。',
       'state.unsupported':'适配不匹配','hint.unsupported':'请查看异常项。','state.removal':'等待卸载','state.disabled':'已停用','hint.reboot':'重启后生效。',
       'check.system':'系统版本','check.apex':'网络组件','check.kernel':'内核接口','check.mounts':'运行库挂载',
@@ -84,6 +85,7 @@
       'state.error':'无法读取','hint.error':'请检查管理器权限后刷新。'
     },
     en: {
+      'check.instance':'Verified service instance','fix.instance':'The service restarted or has not been verified. Check crash logs.','network.reason.service_restarted':'Verified service exited or restarted',
       'network.reason.prepare_timeout':'Preparation timed out or was interrupted',
       "network.title":"Network adaptation",
       "network.scope":"Adapts at startup · Checks do not generate files or restart services",
@@ -152,7 +154,7 @@
       reportTitle:'Diagnostic report',logTitle:'Last 120 lines',emptyLog:'No log entries',privacy:'Check logs for app paths before sharing.',
       language:'Language',auto:'System default',fullscreen:'Fullscreen',fullscreenHint:'Off by default',fullscreenUnavailable:'Not supported by this manager',
       applicable:'System version',details:'More details',checkHint:'Suggestions appear only for failed checks',copied:'Copied',copyManual:'Text selected. Long-press to copy.',
-      'state.waiting':'Not ready','hint.waiting':'See the Checks page.','state.ready':'Running normally','hint.ready':'32-bit service is ready.',
+      'state.waiting':'Not ready','hint.waiting':'See the Checks page.','state.ready':'Runtime ready','hint.ready':'Environment checks passed; app compatibility is not guaranteed.',
       'state.security':'Check SELinux','state.booting':'Starting up','hint.booting':'Refresh shortly.',
       'state.unsupported':'Compatibility mismatch','hint.unsupported':'Review the failed checks.','state.removal':'Removal pending','state.disabled':'Disabled','hint.reboot':'Takes effect after reboot.',
       'check.system':'System version','check.apex':'Network component','check.kernel':'Kernel interface','check.mounts':'Runtime mounts',

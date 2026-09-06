@@ -1,6 +1,16 @@
 #!/system/bin/sh
 # SPDX-License-Identifier: GPL-3.0-only
 # Small atomic progress record. Readers never hash JARs or launch probes.
+zygote_identity() {
+  identity_pid=${1:-$(getprop init.svc_debug_pid.zygote_tango)}
+  case "$identity_pid" in ''|0|*[!0-9]*) return 1;; esac
+  read -r identity_stat < "/proc/$identity_pid/stat" || return 1
+  identity_stat=${identity_stat##*) }
+  set -- $identity_stat
+  [ "$#" -ge 20 ] || return 1
+  shift 19
+  printf '%s:%s\n' "$identity_pid" "$1"
+}
 network_event() {
   event_now=$(cut -d. -f1 /proc/uptime)
   event_begin=${NETWORK_BEGIN:-$event_now}

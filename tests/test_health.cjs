@@ -36,3 +36,9 @@ test('snapshot transport preserves untrusted Unicode text and rejects truncation
   const missing = {...ready}; delete missing.probe_code;
   assert.throws(() => parseSnapshot(encode(missing)));
 });
+
+test('restarted zygote cannot inherit successful startup evidence',()=>{
+ const d={...ready,network_schema:'2',network_cache_valid:'1',network_active_match:'1',network_jni:'1',network_mode:'dynamic',network_service_match:'0'};
+ assert.equal(analyze(d).ready,false);
+ assert.equal(analyze({...d,network_service_match:'1'}).ready,true);
+});

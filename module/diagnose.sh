@@ -37,7 +37,12 @@ flag apex_match runtime_guard
 emit network_hash "$network_hash"
 emit network_candidate "$NETWORK_MODE"
 emit network_mode "$(cat "$STATE/network-mode" 2>/dev/null)"
-emit network_schema 1
+emit network_schema 2
+verified_identity=$(cat "$STATE/zygote-identity" 2>/dev/null)
+current_identity=$(zygote_identity 2>/dev/null)
+flag network_service_match test -n "$verified_identity" -a "$verified_identity" = "$current_identity"
+emit zygote_verified "$verified_identity"
+emit zygote_current "$current_identity"
 network_read_state
 emit network_stage "$NET_STAGE"
 emit network_reason "$NET_REASON"
