@@ -18,7 +18,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -v
           python3 -m py_compile scripts/build.py scripts/build_network_tool.py
-          node --test tests/test_health.cjs tests/test_i18n.cjs tests/test_monitor.cjs
+          node --test tests/test_health.cjs tests/test_i18n.cjs tests/test_monitor.cjs tests/test_webui.cjs
           node --check module/webroot/app.js
           node --check module/webroot/monitor.js
           cc -std=gnu11 -Wall -Wextra -Werror -fsanitize=address,undefined tests/test_fd_compat.c -o /tmp/test-fd-compat -ldl

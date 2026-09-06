@@ -2,6 +2,7 @@
 (function(root) {
   const messages = {
     'zh-CN': {
+      'network.cacheDetails':'缓存详情','checks.passed':'已通过 {count} 项','checks.allPassed':'本次检查无异常',
       'check.instance':'服务实例未重启','fix.instance':'32 位服务已重启或尚未验证，请查看崩溃日志。','network.reason.service_restarted':'已验证的服务退出或重启',
       'network.reason.prepare_timeout':'准备过程超时或中断',
       "network.title":"网络自动适配",
@@ -85,6 +86,7 @@
       'state.error':'无法读取','hint.error':'请检查管理器权限后刷新。'
     },
     en: {
+      'network.cacheDetails':'Cache details','checks.passed':'{count} checks passed','checks.allPassed':'No issues in this check',
       'check.instance':'Verified service instance','fix.instance':'The service restarted or has not been verified. Check crash logs.','network.reason.service_restarted':'Verified service exited or restarted',
       'network.reason.prepare_timeout':'Preparation timed out or was interrupted',
       "network.title":"Network adaptation",

@@ -16,7 +16,8 @@
     document.querySelector('.toolbar').hidden=['settings','monitor'].includes(name);
     if(focus){scrollTo(0,0);$('hero-title').focus({preventScroll:true});}
   }
-  window.addEventListener('hashchange',()=>showPage(true));
+  const needsSnapshot=()=>!['settings','monitor'].includes(location.hash.slice(1));
+  window.addEventListener('hashchange',()=>{showPage(true);if(needsSnapshot()&&!snapshot&&!failed)refresh();});
   function updateTheme() {
     document.querySelector('meta[name="theme-color"]').content=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
   }
@@ -63,20 +64,30 @@
     $('version').textContent=d.module_version||'—';$('updated').textContent=t('updated',{time:d.collected_at||'—'});
     const sec=Number(d.uptime);
     rows('device',[['model',d.model],['build',d.build],['soc',d.soc]]);
+    const restarted=d.network_schema==='2'&&d.network_service_match==='0'&&d.network_stage==='ready';
+    const networkStage=restarted?'failed':d.network_stage||'unknown';
+    const networkReason=restarted?'service_restarted':d.network_reason||'none';
+    $('network-stage').textContent=t(`network.stage.${networkStage}`);
+    $('network-stage').className=`badge ${networkStage==='failed'?'warn':''}`;
+    $('network-reason').hidden=networkReason==='none';
+    $('network-reason').textContent=t(`network.reason.${networkReason}`);
     rows('network-details',[
-      ['network.stage',t(`network.stage.${d.network_stage||'unknown'}`)],
-      ['network.reason',t(`network.reason.${d.network_reason||'none'}`)],
       ['network.cache',`${d.network_cache_count||'0'} / 8`],
       ['network.duration',`${d.network_seconds||'0'} s`],
       ['network.selected',d.network_active_key?.slice(0,12)||'—']
     ]);
     rows('device-extra',[['Android',`${d.android||'—'} · API ${d.sdk||'—'}`],['uptime',Number.isFinite(sec)?t('duration',{h:Math.floor(sec/3600),m:Math.floor(sec%3600/60)}):'—'],['abi',d.abi32||t('notDeclared')],['kernel',d.kernel]]);
     $('check-count').textContent=t('count',{pass:h.checks.filter(c=>c.ok).length,total:h.checks.length});
-    $('checks').replaceChildren(...h.checks.map(c=>{
+    const checkRow=c=>{
       const row=element('div','',`check ${c.tone}`),content=element('div','');content.append(element('strong',t(c.label)));
       if(!c.ok)content.append(element('p',t(c.detail)));
       row.append(element('span',c.ok?'✓':'!','icon'),content,element('span',t(c.ok?'pass':'issue'),'result'));return row;
-    }));
+    };
+    const passed=h.checks.filter(c=>c.ok),issues=h.checks.filter(c=>!c.ok);
+    $('checks').replaceChildren(...(issues.length?issues.map(checkRow):[element('p',t('checks.allPassed'),'all-passed')]));
+    $('passed-box').hidden=passed.length===0;
+    $('passed-title').textContent=t('checks.passed',{count:passed.length});
+    $('passed-checks').replaceChildren(...passed.map(checkRow));
     $('report').disabled=busy;
     if(!$('report-box').hidden)report();
   }
@@ -85,6 +96,7 @@
     ['compat','runtime','selinux'].forEach(id=>$(id).textContent=t('unknown'));
     $('updated').textContent='—';$('check-count').textContent='—';$('checks').replaceChildren(element('p',t('waiting'),'placeholder'));
     $('device').replaceChildren();$('device-extra').replaceChildren();$('network-details').replaceChildren();$('version').textContent='—';$('report').disabled=true;
+    $('network-stage').textContent='—';$('network-reason').hidden=true;$('passed-box').hidden=true;$('passed-checks').replaceChildren();
   }
   function translate() {
     document.documentElement.lang=I.language();
@@ -110,11 +122,11 @@
     try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(field.value);else if(!document.execCommand('copy'))throw Error();notice('copied');}catch(_){notice('copyManual');}
   });
   $('logs').addEventListener('click',async()=>{
-    $('logs').disabled=true;notice();
+    $('logs').disabled=true;$('log-kind').disabled=true;notice();
     try{const kind=$('log-kind').value;if(!['startup','prepare','probe'].includes(kind))throw Error('error.format');$('log-text').textContent=await execute(`${commands.logs} ${kind}`)||t('emptyLog');$('log-box').hidden=false;$('log-box').open=true;}
     catch(e){$('log-box').hidden=true;notice(I.messages.en[e.message]?e.message:'error.unknown',{code:e.code??'?'});}
-    finally{$('logs').disabled=false;}
+    finally{$('logs').disabled=false;$('log-kind').disabled=false;}
   });
   $('log-kind').addEventListener('change',()=>{$('log-box').hidden=true;});
-  translate();fullscreen(false);refresh();
+  translate();fullscreen(false);$('logs').disabled=!bridgeAvailable();if(needsSnapshot())refresh();
 })();

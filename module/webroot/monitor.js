@@ -3,6 +3,7 @@
   'use strict';
   const $=id=>document.getElementById(id),t=TangoI18n.t;
   let state=null,error=false,changing=false,visible=true,sequence=0;
+  let listKey='';
   const active=()=>visible&&!document.hidden&&location.hash==='#monitor'&&!changing;
   function command(action='status'){return new Promise((resolve,reject)=>{
     if(!['status','enable','disable'].includes(action)||typeof window.ksu?.exec!=='function'){reject(Error('error.bridge'));return;}
@@ -23,15 +24,20 @@
     $('monitor-memory').textContent=snapshot?`${(snapshot.rss/1024).toFixed(1)} MiB`:'—';
     const net=snapshot?.network;
     $('monitor-network').textContent=net?`${t('network.stage.'+net.stage)} · ${net.seconds} s${net.reason==='none'?'':' · '+t('network.reason.'+net.reason)}`:'—';
-    $('monitor-processes').replaceChildren();
+    const nextKey=JSON.stringify([TangoI18n.language(),error,!!snapshot,snapshot?.found,snapshot?.processes]);
+    if(nextKey!==listKey){
+    listKey=nextKey;
+    const items=[];
     if(snapshot?.found){
       snapshot.processes.forEach(p=>{
         const row=document.createElement('div');row.className='process-row';
         const name=document.createElement('span');name.textContent=p.name;name.className='process-name';
         const meta=document.createElement('small');meta.textContent=`PID ${p.pid} · ${(p.rss/1024).toFixed(1)} MiB`;
-        row.append(name,meta);$('monitor-processes').append(row);
+        row.append(name,meta);items.push(row);
       });
-    }else{const p=document.createElement('p');p.className='muted';p.textContent=t(snapshot?'monitor.noRoot':error?'monitor.error':'monitor.empty');$('monitor-processes').append(p);}
+    }else{const p=document.createElement('p');p.className='muted';p.textContent=t(snapshot?'monitor.noRoot':error?'monitor.error':'monitor.empty');items.push(p);}
+    $('monitor-processes').replaceChildren(...items);
+    }
     $('monitor-limit').hidden=!snapshot||snapshot.count<=100;
   }
   const monitor=TangoMonitor.poller({read:()=>command(),receive(value){state=value;error=false;render();},fail(){state=null;error=true;render();}});
