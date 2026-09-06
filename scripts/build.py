@@ -164,10 +164,16 @@ def main():
         urllib.request.urlretrieve(profile['network_factory_bundle_url'], network_archive)
     extract_network_bundle(network_archive, stage / 'network/factory-361524320',
                            profile['network_factory_bundle_sha256'])
+    from build_network_tool import build_tool
+    sdk = os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT')
+    if not sdk:
+        raise ValueError('ANDROID_HOME is required to build the on-device network merger')
+    build_tool(sdk, stage / 'network-tools', build / 'network-dependencies')
     shutil.copyfile(native / 'zygote_probe', stage / 'zygote_probe')
     (stage / 'payload.sha256').write_text(f'{sha256(image)}  payload.img\n')
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     metadata = {'profile': profile, 'source_commit': commit, 'payload_sha256': sha256(image),
+                'network_tools_sha256': {p.name: sha256(p) for p in sorted((stage / 'network-tools').iterdir()) if p.is_file()},
                 'native_sha256': {p.name: sha256(p) for p in sorted(native.iterdir()) if p.is_file()},
                 'validation': 'CI build is not a device compatibility test'}
     (stage / 'build-info.json').write_text(json.dumps(metadata, indent=2) + '\n')

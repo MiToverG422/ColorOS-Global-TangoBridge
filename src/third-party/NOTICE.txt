@@ -1,0 +1,12 @@
+Network merger dependencies:
+
+smali-dexlib2 3.0.9 — BSD 3-Clause; see Smali-BSD-3-Clause.txt.
+Source: https://github.com/google/smali
+
+Guava 31.1-android and failureaccess 1.0.1 — Apache License 2.0;
+see Apache-2.0.txt. Source: https://github.com/google/guava
+
+jsr305 3.0.2 is used as a build-time annotation library, not bundled as DEX code.
+
+donor.jar is an extracted Android/OPlus runtime component. It retains its original
+third-party licenses and is not relicensed under this project's GPL license.

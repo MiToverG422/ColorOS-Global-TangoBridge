@@ -30,16 +30,17 @@
 
 工作流使用固定 Android NDK `29.0.14206865` 从源码编译 ARM64 启动器、zygote 探针和 ARM32 兼容库。然后下载本仓库 `runtime-cph2841-ex01-500-v1` Release 中的已固定运行库基底，验证 ZIP 和 `payload.img` 的 SHA-256，将新编译文件写入镜像并重新打包。
 
-**这不是从源码编译 Tango。** Tango 和 Android / OPlus 配套运行库是固件预编译文件；完整固件不存入 Git。基底还包含已合并的网络 Java 组件：保留国际版接口，并匹配国行 ARM32 HTTP/Cronet 实现。`src/MergeConnectivity.java` 提供合并工具源码供审查，常规工作流直接使用基底内固定的合并结果，不重新生成该组件。
+**这不是从源码编译 Tango。** Tango 和 Android / OPlus 配套运行库是固件预编译文件；完整固件不存入 Git。0.7.0 起，工作流还从源码编译手机端网络 Java 合并工具，运行合并回归测试，并打包哈希固定的国行网络 JAR。依赖的版本、下载地址和 SHA-256 在 `scripts/build_network_tool.py` 中固定，第三方许可随模块放在 `network-tools/`。
 
 运行库的权利归其原权利人；本仓库不为第三方固件二进制授予额外许可。
 
 ### 本地构建
 
-需要 Linux、Python 3.11+、指定版本 Android NDK、`e2fsprogs`、`mount` 及可免交互使用的 sudo：
+需要 Linux、Python 3.11+、JDK 17、Android SDK（platforms;android-36、build-tools;36.0.0）、指定版本 Android NDK、`e2fsprogs`、`mount` 及可免交互使用的 sudo：
 
 ```sh
 export ANDROID_NDK_HOME=/path/to/android-ndk
+export ANDROID_HOME=/path/to/android-sdk
 python3 -m unittest discover -s tests -v
 python3 scripts/build.py
 ```
@@ -48,7 +49,7 @@ python3 scripts/build.py
 
 ## 安装与卸载
 
-### WebUI（0.6.2-test）
+### WebUI
 
 安装后，在支持 WebUI 的 KernelSU 兼容管理器中打开本模块的 **WebUI / 打开** 入口，即可查看中文检测面板。已移除 `action.sh`，仅保留 WebUI 交互入口。
 
@@ -75,7 +76,19 @@ python3 scripts/build.py
 
 OTA 后应先停用模块，确认新系统兼容性后再启用。适配其他机型或版本需要重新检查内核接口、init 服务、ART/APEX、运行库及应用实测，仅相同版本号不足以判断兼容。
 
-清除系统数据后，Google Play 系统组件可能恢复为预置版本，即使 ColorOS 版本号不变，网络 APEX 也可能改变。0.6.2 增加预置 `com.android.tethering@361524320` 的 ARM32 Java 适配，并保留原有适配。该配置校验当前网络目录全部五个 JAR 和适配包，只在 ARM32 私有 Java 路径使用匹配文件，不替换全局网络 APEX。未知组件组合仍会拒绝启动；诊断摘要新增实际网络 JAR 哈希，启动失败也会保存明确状态。
+清除系统数据后，Google Play 系统组件可能恢复为预置版本，即使 ColorOS 版本号不变，网络 APEX 也可能改变。
+
+### 网络组件自动适配（0.7.0-test）
+
+启动时读取当前 `/apex/com.android.tethering/javalib` 的 JAR，在手机本地生成 ARM32 专用副本。保留当前系统的非 HTTP 类，以随模块提供的国行 HTTP/Cronet Java 类匹配国行 ARM32 原生库，并补入缺失的国行类。仅挂载到 ARM32 私有路径，不修改原 APEX、系统分区或 APK，不需要联网下载。
+
+缓存位于 `/data/adb/tango32_findx9u/network-cache`，键由当前全部网络 JAR、合并工具、国行 JAR 和生成脚本的哈希构成。首次或组件变化后生成；相同输入直接校验并复用，不在后台持续扫描。当前流程在模块启动时执行，APEX 更新激活后的下次开机会重新检查。
+
+生成过程有互斥锁、超时、内存及输入大小限制，输入在生成期间改变则放弃本次结果，完整文件校验后才发布缓存。启动前另用独立 ARM32 进程检查 HTTP/Cronet 原生库加载和 JNI 注册，再检查 Zygote 响应；探针不发起网络请求。失败时停止模块运行时并记录日志，不绕过检查继续启动。
+
+**这是针对当前运行库的自动合并，不保证任意未来 APEX 或所有 App 都兼容。** 新的 Java 接口、原生依赖或结构变化仍可能需要更新规则/运行库；ART、内核和系统版本的兼容要求不因此放宽。单 DEX 以外的网络框架暂不支持。服务探针通过也不能替代 App 的联网和 WebView 实测。
+
+排查时查看数据目录中的 `network-prepare.log`、`network-probe.log` 和 `startup.log`；摘要中的 `network_candidate` 表示可用配置，`network_mode` 表示已选运行配置。启动探测失败会标记该缓存，避免每次开机重复尝试；修复原因后可由 root 执行 `sh /data/adb/modules/tango32_findx9u/network-prepare.sh retry`，然后重启。该命令只解除失败标记，不修复损坏缓存。最多保留 8 份缓存，达到上限或发现损坏时明确报错；为避免影响正在使用的私有挂载，不自动删除旧缓存。
 
 ## 目录
 

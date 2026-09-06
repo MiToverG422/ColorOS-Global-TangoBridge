@@ -35,6 +35,8 @@ flag kernel_interface test -c /dev/tango32
 flag build_match guard
 flag apex_match runtime_guard
 emit network_hash "$network_hash"
+emit network_candidate "$NETWORK_MODE"
+emit network_mode "$(cat "$STATE/network-mode" 2>/dev/null)"
 flag current_boot test "$(cat "$STATE/boot-id" 2>/dev/null)" = "$(cat /proc/sys/kernel/random/boot_id)"
 flag image_mounted grep -Fq " $IMAGE " /proc/self/mountinfo
 flag system_overlay grep -q ' /system/lib .* - overlay ' /proc/self/mountinfo

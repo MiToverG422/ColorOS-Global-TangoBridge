@@ -17,7 +17,7 @@ jobs:
       - name: Validate build logic and shell syntax
         run: |
           python3 -m unittest discover -s tests -v
-          python3 -m py_compile scripts/build.py
+          python3 -m py_compile scripts/build.py scripts/build_network_tool.py
           node --test tests/test_health.cjs tests/test_i18n.cjs tests/test_monitor.cjs
           node --check module/webroot/app.js
           node --check module/webroot/monitor.js
@@ -40,6 +40,7 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends e2fsprogs
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install 'platforms;android-36' 'build-tools;36.0.0'
       - name: Compile and assemble module
         run: python3 scripts/build.py
       - name: Upload module ZIP, checksums and build provenance

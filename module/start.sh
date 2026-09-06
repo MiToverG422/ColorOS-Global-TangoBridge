@@ -3,17 +3,27 @@ set -eu
 MODDIR=${1:?module directory required}
 . "$MODDIR/common.sh"
 guard || { echo UNSUPPORTED_BUILD; exit 1; }
-runtime_guard || { mkdir -p "$DATA"; echo UNSUPPORTED_NETWORK_APEX | tee "$DATA/status"; restore_props; exit 1; }
 mkdir -p "$STATE" "$IMAGE"
 BOOT=$(cat /proc/sys/kernel/random/boot_id)
 if [ -f "$STATE/boot-id" ] && [ "$(cat "$STATE/boot-id")" = "$BOOT" ] && [ -s "$STATE/mounts.list" ]; then
   echo ALREADY_MOUNTED; exit 0
 fi
+if ! sh "$MODDIR/network-prepare.sh" > "$DATA/network-prepare.log" 2>&1; then
+  echo NETWORK_PREPARE_FAILED | tee "$DATA/status"
+  cat "$DATA/network-prepare.log"
+  restore_props; exit 1
+fi
+runtime_guard && [ "$NETWORK_MODE" = dynamic ] || { echo UNSUPPORTED_NETWORK_APEX | tee "$DATA/status"; restore_props; exit 1; }
 printf '%s\n' "$BOOT" > "$STATE/boot-id"
 rm -f "$STATE/binfmt-mounted" "$STATE/binfmt-registered"
 : > "$STATE/mounts.list"
 echo STARTING > "$DATA/status"
-fail() { sh "$MODDIR/stop.sh" "$MODDIR"; echo FAILED > "$DATA/status"; }
+probing=0
+fail() {
+  [ "$probing" != 1 ] || touch "$NETWORK_COMPAT/startup-failed"
+  sh "$MODDIR/stop.sh" "$MODDIR"
+  echo FAILED > "$DATA/status"
+}
 trap fail EXIT
 setprop ctl.stop zygote_tango
 "$BB" mount -t ext4 -o loop,rw "$MODDIR/payload.img" "$IMAGE"
@@ -30,6 +40,7 @@ if [ -n "$NETWORK_COMPAT" ]; then
   "$BB" mount --bind "$NETWORK_COMPAT" "$network_target"
   printf '%s\n' "$network_target" >> "$STATE/mounts.list"
   "$BB" mount -o remount,bind,ro "$network_target"
+  printf '%s\n' "$NETWORK_MODE" > "$STATE/network-mode"
 fi
 props
 if ! grep -q ' /proc/sys/fs/binfmt_misc ' /proc/self/mountinfo; then
@@ -43,6 +54,12 @@ else
   echo 'Existing Tango binfmt registration; preserving it'
 fi
 /system_ext/bin/tango_translator "$IMAGE/tests/arm32_probe"
+probing=1
+if ! CLASSPATH=$MODDIR/network-tools/network-merger.jar "$BB" timeout 25 /system/bin/app_process32 /system/bin NetworkNativeProbe > "$DATA/network-probe.log" 2>&1; then
+  cat "$DATA/network-probe.log"; exit 1
+fi
+grep -q '^NETWORK_JNI_LOAD_OK$' "$DATA/network-probe.log" || exit 1
+echo NETWORK_JNI_LOAD_OK
 setprop ctl.start zygote_tango
 i=0
 while ! "$MODDIR/zygote_probe"; do
